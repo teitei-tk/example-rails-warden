@@ -17,6 +17,12 @@ require "sprockets/railtie"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
+class UnAuthroized
+  def self.call(env)
+    Rack::Response.new('unauthroized', '401', {'Content-Type' => 'text/plain'})
+  end
+end
+
 module ExampleRailsWarden
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
@@ -29,5 +35,10 @@ module ExampleRailsWarden
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    config.middleware.insert_after ActionDispatch::Flash, Warden::Manager do |manager|
+      manager.default_strategies :password
+      manager.failure_app = UnAuthroized
+    end
   end
 end
